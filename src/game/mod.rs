@@ -1,4 +1,5 @@
 pub mod bird;
+pub mod consts;
 pub mod pipe;
 pub mod shape;
 
@@ -8,7 +9,7 @@ use self::{bird::Bird, pipe::Pipe};
 use crate::screen::Screen;
 use std::{
     io,
-    time::{Duration, Instant},
+    time::{Duration, Instant}, thread::sleep,
 };
 
 pub trait RenderAble {
@@ -35,11 +36,10 @@ impl<T: Screen> Game<T> {
     }
 
     pub fn start(&mut self) -> io::Result<()> {
-        //game loop
-        //self.bird.render(&mut self.screen);
-        let tick_rate = Duration::from_millis(50); //get from env file
+
+        let tick_rate = Duration::from_millis(consts::TICK_RATE);
         let mut last_tick = Instant::now();
-        self.pipe.render(&mut self.screen);
+
         let game_stats = &mut self.game_stats;
 
         let mut posx = 0;
@@ -47,25 +47,23 @@ impl<T: Screen> Game<T> {
 
         loop {
             let bird = Bird::new(posx, posy);
-            let pipe = Pipe::new(posx + 10, 4);
+            let pipe = Pipe::new(posx + consts::BIRD_PIPE_DIST, 4);
 
             pipe.render(&mut self.screen);
             bird.render(&mut self.screen);
 
             let timeout = tick_rate.saturating_sub(last_tick.elapsed());
+            game_stats.vely =  consts::START_VY;
             if event::poll(timeout)? {
                 if let Event::Key(key) = event::read()? {
                     match key.code {
                         KeyCode::Char('q') => break,
                         KeyCode::Up | KeyCode::Char('k') => {
-                            game_stats.vely = 0.1;
+                            game_stats.vely = -2.0 * consts::START_VY;
                         }
                         _ => {}
                     }
 
-                    if key.kind == event::KeyEventKind::Release {
-                        game_stats.vely = -0.1;
-                    }
                 }
             }
 
@@ -73,10 +71,11 @@ impl<T: Screen> Game<T> {
                 last_tick = Instant::now();
             }
 
-            game_stats.tplayed += 0.5;
-            game_stats.pts += 1;
-            posx = (game_stats.velx * game_stats.tplayed) as u16 % game_stats.fdiv;
-            posy = (game_stats.vely * game_stats.tplayed) as u16 % game_stats.fysize;
+            game_stats.tplayed += consts::PT_TIME_INC;
+            game_stats.pts += consts::PT_SCORE_INC;
+
+            posx = (posx as f64 +  game_stats.velx * consts::PT_TIME_INC) as u16 % game_stats.fdiv;
+            posy = (posy as f64 + game_stats.vely * consts::PT_TIME_INC) as u16 % game_stats.fysize;
         }
 
         return Ok(());
@@ -95,12 +94,9 @@ pub struct GameStats {
 
 impl GameStats {
     pub fn new(fxsize: u16, fysize: u16) -> Self {
-        let start_velx = 0.1;
-        let start_vely = -0.1;
-
         return Self {
-            velx: start_velx,
-            vely: start_vely,
+            velx: consts::START_VX,
+            vely: consts::START_VY,
             pts: 0,
             fxsize,
             fysize,

@@ -1,4 +1,4 @@
-use std::io::{self, Stdout};
+use std::{io::{self, Stdout}, time::Instant};
 
 use ratatui::{
     backend::CrosstermBackend,
@@ -26,6 +26,7 @@ impl Screen for CrossTermDisplay {
 
     fn draw(&mut self, area: Rect) -> io::Result<()> {
         self.terminal.draw(|frame| {
+            //println!("Size: {}, Rendering at time: {:?}", area.height, Instant::now());
             frame.render_widget(Block::default().borders(Borders::ALL), area);
         })?;
         return Ok(());

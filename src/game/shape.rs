@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub struct SRectangle{
     pub x: u16,
     pub y: u16,

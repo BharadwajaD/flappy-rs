@@ -6,6 +6,8 @@ use ratatui::{Terminal, backend::CrosstermBackend};
 
 fn main() -> io::Result<()>{
 
+    simple_logging::log_to_file("logs.txt", log::LevelFilter::Debug).unwrap();
+
     enable_raw_mode()?;
     stdout().execute(EnterAlternateScreen)?;
 

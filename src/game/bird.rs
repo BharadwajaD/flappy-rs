@@ -18,6 +18,7 @@ impl Bird {
 impl RenderAble for Bird {
     fn render(&self, screen: &mut dyn Screen) {
         let area = Rect::new(self.posx, self.posy, 2, 2);
+        log::debug!("Rendering bird: {:?}" , area);
         screen.draw(area).unwrap();
     }
 }

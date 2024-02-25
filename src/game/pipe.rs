@@ -42,6 +42,7 @@ impl RenderAble for Pipe {
         match &self.boxes {
             Shape::SRect(srect) => {
                 let area = Rect::new(srect.x, srect.y, srect.width, srect.height);
+                log::debug!("Rendering pipe: {:?}" , area);
                 screen.draw(area).unwrap();
             }
         };
