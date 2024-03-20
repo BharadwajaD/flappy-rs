@@ -12,7 +12,7 @@ local function create_win_config()
         row = 0,-- (row,col) pos relative to the external window
         col = 0,
         width = 80,
-        height = 24
+        height = 24,
     }
 end
 
@@ -29,10 +29,22 @@ end
 
 function M.create_window()
     local win_config = M.create_win_center_config()
-    local buf = api.nvim_create_buf(false, true)
-    local window = api.nvim_open_win(buf, true, win_config)
+    local width = win_config.width
+    local height = win_config.height
 
-    return window
+    local empty = {}
+    for _ = 1, height, 1 do
+        table.insert(empty, "")
+    end
+
+    local buffer_id = api.nvim_create_buf(false, true)
+    local window = api.nvim_open_win(buffer_id, true, win_config)
+    api.nvim_win_set_buf(window, buffer_id)
+
+    -- Fill buffer with empty lines
+    api.nvim_buf_set_lines(buffer_id, 0, 1, 0, empty)
+
+    return {dim = {width = width, height = height}, buffer_id = buffer_id}
 end
 
 
