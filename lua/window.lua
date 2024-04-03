@@ -2,7 +2,7 @@ local api = vim.api
 
 local M = {}
 
-local function create_win_config()
+local function create_win_config(dim)
     return {
         relative = "editor",
         title = "flappy-bird",
@@ -11,14 +11,14 @@ local function create_win_config()
         anchor = "NW",
         row = 0,-- (row,col) pos relative to the external window
         col = 0,
-        width = 80,
-        height = 24,
+        width = dim.width or 80,
+        height = dim.height or 24,
     }
 end
 
-function M.create_win_center_config()
+function M.create_win_center_config(dim)
 
-    local win_config = create_win_config()
+    local win_config = create_win_config(dim)
     local ui = api.nvim_list_uis()[1]
 
     win_config.row = math.floor((ui.height - win_config.height)/2)
@@ -27,8 +27,8 @@ function M.create_win_center_config()
     return win_config
 end
 
-function M.create_window()
-    local win_config = M.create_win_center_config()
+function M.create_window(dim)
+    local win_config = M.create_win_center_config(dim)
     local width = win_config.width
     local height = win_config.height
 
