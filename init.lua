@@ -15,11 +15,13 @@ function START()
     local client = uv.new_tcp()
     M.client = client
 
-    client:connect("127.0.0.1", 8080, function (err)
+    client:connect("127.0.0.1", 42069, function (err)
         print("client created & connected to server")
     end)
 
     client:read_start(vim.schedule_wrap(function (err, chunk)
+
+        client:write(chunk)
 
         local obj = tcp.parse(chunk)
         assert(obj, "string parsing went wrong")
@@ -35,9 +37,11 @@ function START()
             if M.win_config == nil then
                 M.win_config = window.create_window({width = 80, height = 24})
             end
-            print("CHUNK:" .. chunk, vim.inspect(obj))
             render.draw_pipe(M.win_config.dim, M.win_config.buffer_id,  param1, param2)
         else
+            if M.win_config == nil then
+                M.win_config = window.create_window({width = 80, height = 24})
+            end
             render.draw_bird(M.win_config.dim, M.win_config.buffer_id, param1, param2)
         end
     end))
@@ -47,6 +51,4 @@ function END()
     assert(M.client, "client already closed")
     M.client:read_stop()
 end
-
-
 

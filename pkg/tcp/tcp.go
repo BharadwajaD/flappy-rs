@@ -1,6 +1,7 @@
 package tcp
 
 import (
+	"bufio"
 	"fmt"
 	"log"
 	"net"
@@ -55,18 +56,25 @@ func (server *Server) Run() {
 }
 
 func (client *Client) handleRequest() {
-	//reader := bufio.NewReader(client.conn)
 	log.Printf("%v connected\n", client.conn)
 
     go client.game.Start()
+    go func(){
+        for gmsg := range client.game.GameOutChan {
+            gmsg, err := game.MessageToStr(&gmsg)
+            if err != nil {
+                log.Fatalf(err.Error())
+            }
+            client.conn.Write([]byte(gmsg))
+        }
+    }()
 
-	for gmsg := range client.game.GameChan {
-        log.Printf("GameMessage:%v\n", gmsg)
-		gmsg, err := game.MessageToStr(&gmsg)
-        log.Printf("GameMessage:%v\n", gmsg)
-		if err != nil {
-			log.Fatalf(err.Error())
-		}
-		client.conn.Write([]byte(gmsg))
-	}
+    reader := bufio.NewReader(client.conn)
+    for {
+        msg, err := reader.ReadString('?')
+        if err != nil {return}
+        gmsg , err := game.MessageFromStr(string(msg))
+        if err != nil {return}
+        client.game.GameInChan <- gmsg
+    }
 }

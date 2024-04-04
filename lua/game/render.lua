@@ -9,7 +9,6 @@ local M = {}
  --@param height
 -- creates a row
 local function set_row(width, x_loc, char)
-    print("DEBUG:SET_ROW:", width, x_loc)
     local line = ""
     for i = 0, width-1, 1 do
         if i == x_loc then
