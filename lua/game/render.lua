@@ -25,29 +25,36 @@ end
  --@param x_loc
  --@param height
  --Draw pipe of given height at x_loc
- function M.draw_pipe(dim, buffer_id, x_loc, height)
+ function M.add_pipe(buffer, x_loc, height)
 
-    print(height, math.floor(dim.height)/2)
+    local dim = buffer.dim
     assert(height < math.floor(dim.height)/2, "too long pipe")
 
-    local pipe = {}
-    local line = set_row(dim.width, x_loc, "x")
-    for _ = 1, height, 1 do
-        table.insert(pipe, line)
-    end
-
-    api.nvim_buf_set_lines(buffer_id, 0, height,1, pipe)
-    api.nvim_buf_set_lines(buffer_id, dim.height-height, dim.height,1, pipe)
+    buffer:place_vline(x_loc, height, "x")
+    buffer:place_vline(x_loc, height, "x", true)
  end
+
+function M.remove_pipe(buffer, x_loc, height)
+    buffer:remove_vline(x_loc, height)
+    buffer:remove_vline(x_loc, height, true)
+end
 
  --@param dim
  --@param buffer_id
  --@param x_loc
  --@param y_loc
  --Draw bird at the given (x, y) location
- function M.draw_bird(dim, buffer_id , x_loc, y_loc)
-    local line = set_row(dim.width, x_loc, "b")
-    api.nvim_buf_set_lines(buffer_id,  y_loc, y_loc+1,0, {line})
+ function M.update_bird(buffer , x_loc, y_loc)
+    if M.prev_bird == nil then
+        M.prev_bird = {x_loc= x_loc, y_loc= y_loc}
+    end
+    local prev = M.prev_bird
+
+    buffer:remove_point(prev.x_loc, prev.y_loc)
+    buffer:place_point(x_loc, y_loc, "b")
+
+    M.prev_bird = {x_loc= x_loc, y_loc= y_loc}
+
  end
 
 return M
