@@ -11,13 +11,14 @@ type Object int
 const (
 	Bird Object = iota
 	Pipe
+    Start
 )
 
 // From go to lua
 type Message struct {
-	obj    Object
-	param1 int
-	param2 int
+	Obj    Object
+	Param1 int
+	Param2 int
 }
 
 // B:24:32?P:12:22? ->
@@ -43,9 +44,9 @@ func MessageFromStr(chunk string) (Message, error) {
 	obj := strings.TrimSpace(str_splits[0])
     
 	if obj == "B" {
-		msg.obj = Bird
+		msg.Obj = Bird
 	} else if obj == "P" {
-		msg.obj = Pipe
+		msg.Obj = Pipe
 	} else {
 		return msg, fmt.Errorf("Invalid first char:%s", str_splits[0])
 	}
@@ -57,22 +58,24 @@ func MessageFromStr(chunk string) (Message, error) {
 		return msg, fmt.Errorf("Invalid second or third fields:%s|%s", str_splits[1], str_splits[2])
 	}
 
-	msg.param1 = param1
-	msg.param2 = param2
+	msg.Param1 = param1
+	msg.Param2 = param2
 
 	return msg, nil
 }
 
 func MessageToStr(msg *Message) (string, error) {
 	str := ""
-	if msg.obj == Bird {
+	if msg.Obj == Bird {
 		str += "B:"
-	} else if msg.obj == Pipe {
+	} else if msg.Obj == Pipe {
 		str += "P:"
-	} else {
-		return "", fmt.Errorf("Object %v is not defined", msg.obj)
-	}
+	} else if msg.Obj == Start {
+		str += "S:" //start cmd
+	}else {
+        return "", fmt.Errorf("No obj %v\n", msg.Obj)
+    }
 
-	str += strconv.Itoa(msg.param1) + ":" + strconv.Itoa(msg.param2) + "?"
+	str += strconv.Itoa(msg.Param1) + ":" + strconv.Itoa(msg.Param2) + "?"
 	return str, nil
 }

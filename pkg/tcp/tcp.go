@@ -49,7 +49,7 @@ func (server *Server) Run() {
 
 		client := &Client{
 			conn: conn,
-			game: game.NewGame(game.NewGameOpts(1000)),
+			game: game.NewGame(game.NewGameOpts(1, 80, 24)),
 		}
 		go client.handleRequest()
 	}
@@ -65,6 +65,7 @@ func (client *Client) handleRequest() {
             if err != nil {
                 log.Fatalf(err.Error())
             }
+            log.Printf("Sent: %s\n", gmsg)
             client.conn.Write([]byte(gmsg))
         }
     }()
