@@ -29,7 +29,7 @@ function Buffer:render()
         end
         table.insert(tbl, line)
     end
-    api.nvim_buf_set_lines(self.buffer_id, 0, 1, 0, tbl)
+    api.nvim_buf_set_lines(self.buffer_id, 0, -1, 0, tbl)
 end
 
 function Buffer:place_point(x, y, char)
