@@ -1,8 +1,8 @@
 local Queue = {}
 Queue.__index = Queue
 
-function Queue:new(capacity)
-    self.capacity = capacity
+function Queue:new(capacity) -- Circular queue
+    self.capacity = capacity + 1
     self.head = 0
     self.tail = 0
     self.content = {}

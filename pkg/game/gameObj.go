@@ -1,5 +1,7 @@
 package game
 
+import "math/rand"
+
 type Stats struct {
 	time_started int
 	points       int
@@ -10,6 +12,18 @@ type Pipe_t struct {
 	height int
 }
 
+func GenPipes(opts GameOpts) chan Pipe_t {
+    pipes_out := make(chan Pipe_t, 10)
+    go func (){
+        for {
+            height := rand.Intn(opts.win_height / 2 - 1)
+            xloc := rand.Intn(opts.win_width)
+            pipes_out <- Pipe_t{ xloc: xloc, height: height}
+        }
+    }()
+    return pipes_out
+}
+
 type Bird_t struct {
 	xloc         int
 	yloc         int
@@ -18,10 +32,12 @@ type Bird_t struct {
 	time_started int
 }
 
-func NewBird() Bird_t {
+func NewBird(opts GameOpts) Bird_t {
 	return Bird_t{
-		vy: 2,
-		vx: 2,
+        xloc: 0,
+        yloc: opts.win_height / 2,
+		vy: 0,
+		vx: 0,
 	}
 }
 

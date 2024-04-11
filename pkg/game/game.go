@@ -17,6 +17,8 @@ func NewGameOpts(fps, win_width, win_height int) GameOpts {
 	return GameOpts{
 		frame_rate: fps,
 		ticker:     ticker,
+		win_width:  win_width,
+		win_height: win_height,
 	}
 }
 
@@ -26,26 +28,28 @@ type Game struct {
 	Stats       string
 	gameOpts    GameOpts
 	bird        Bird_t
-	pipe        Pipe_t // might be a list
+	pipe        chan Pipe_t // might be a list
 }
 
 func NewGame(opts GameOpts) Game {
 
 	GameOutChan := make(chan Message)
-	//GameOutChan <- Message{Obj: Start, Param1: opts.win_width, Param2: opts.win_height}
 
 	return Game{
 		GameOutChan: GameOutChan,
 		GameInChan:  make(chan Message),
 		Stats:       "",
 		gameOpts:    opts,
-		bird:        NewBird(),
+		bird:        NewBird(opts),
+		pipe:        GenPipes(opts),
 	}
 }
 
 func (g *Game) Start() error {
 
 	ticker := g.gameOpts.ticker
+	//TODO: Deal with dis later
+	//g.GameOutChan <- Message{Obj: Start, Param1: g.gameOpts.win_width, Param2: g.gameOpts.win_height}
 
 	go func() {
 		isKeyPressed := false
@@ -57,11 +61,12 @@ func (g *Game) Start() error {
 					//isKeyPressed = true
 					log.Printf("Recieved %v from client\n", inMsg)
 				}
-			case c := <-ticker.C:
+			case <-ticker.C:
 				{
 					g.bird.UpdatePos(isKeyPressed)
+                    pipe := <- g.pipe
 					g.GameOutChan <- Message{Obj: Bird, Param1: g.bird.xloc, Param2: g.bird.yloc}
-					g.GameOutChan <- Message{Obj: Pipe, Param1: c.Second(), Param2: 2}
+					g.GameOutChan <- Message{Obj: Pipe, Param1: pipe.xloc , Param2: pipe.height}
 					isKeyPressed = false
 				}
 			}

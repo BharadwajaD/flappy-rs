@@ -49,7 +49,7 @@ func (server *Server) Run() {
 
 		client := &Client{
 			conn: conn,
-			game: game.NewGame(game.NewGameOpts(1, 80, 24)),
+			game: game.NewGame(game.NewGameOpts(10, 80, 24)),
 		}
 		go client.handleRequest()
 	}
