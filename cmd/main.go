@@ -1,12 +1,16 @@
 package main
 
-import "github.com/bharadwajaD/flappy-go/pkg/tcp"
+import (
+	"github.com/bharadwajaD/flappy-go/pkg/game"
+	"github.com/bharadwajaD/flappy-go/pkg/tcp"
+)
 
 func main(){
-    server := tcp.NewServer(&tcp.Config{
+    gameOpts := game.NewGameOpts(1, 80, 24);
+    serverConfig := tcp.Config{
     	Host: "127.0.0.1",
     	Port: "42069",
-    })
-
-    server.Run()
+    }
+    server := tcp.NewServer(&serverConfig)
+    server.Run(&gameOpts)
 }

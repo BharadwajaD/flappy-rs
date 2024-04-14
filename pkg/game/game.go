@@ -40,8 +40,8 @@ func NewGame(opts GameOpts) Game {
 		GameInChan:  make(chan Message),
 		Stats:       "",
 		gameOpts:    opts,
-		bird:        NewBird(opts),
-		pipe:        GenPipes(opts),
+		bird:        NewBird(&opts),
+		pipe:        GenPipes(&opts),
 	}
 }
 
@@ -65,9 +65,12 @@ func (g *Game) Start() error {
 				{
 					g.bird.UpdatePos(isKeyPressed)
                     pipe := <- g.pipe
-					g.GameOutChan <- Message{Obj: Bird, Param1: g.bird.xloc, Param2: g.bird.yloc}
-					g.GameOutChan <- Message{Obj: Pipe, Param1: pipe.xloc , Param2: pipe.height}
+					g.GameOutChan <- Message{cmd: Bird, params: []int{g.bird.xloc, g.bird.yloc}}
+					g.GameOutChan <- Message{cmd: Pipe, params: []int{pipe.xloc, pipe.height}}
 					isKeyPressed = false
+                    if g.IsCollided(&pipe, &g.bird) {
+					    g.GameOutChan <- Message{cmd: End, params: []int{20}}
+                    }
 				}
 			}
 

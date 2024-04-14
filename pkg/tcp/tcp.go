@@ -34,7 +34,7 @@ func NewServer(config *Config) *Server {
 	}
 }
 
-func (server *Server) Run() {
+func (server *Server) Run(gameOpts *game.GameOpts) {
 	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%s", server.host, server.port))
 	if err != nil {
 		log.Fatal(err)
@@ -49,7 +49,7 @@ func (server *Server) Run() {
 
 		client := &Client{
 			conn: conn,
-			game: game.NewGame(game.NewGameOpts(10, 80, 24)),
+			game: game.NewGame(*gameOpts),
 		}
 		go client.handleRequest()
 	}

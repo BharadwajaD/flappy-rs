@@ -12,16 +12,20 @@ type Pipe_t struct {
 	height int
 }
 
-func GenPipes(opts GameOpts) chan Pipe_t {
-    pipes_out := make(chan Pipe_t, 10)
-    go func (){
-        for {
-            height := rand.Intn(opts.win_height / 2 - 1)
-            xloc := rand.Intn(opts.win_width)
-            pipes_out <- Pipe_t{ xloc: xloc, height: height}
-        }
-    }()
-    return pipes_out
+func GenPipes(opts *GameOpts) chan Pipe_t {
+	pipes_out := make(chan Pipe_t, 10)
+	//max_gap := opts.win_width / 4
+    vx := 1
+	go func() {
+		ppxloc := 0
+		for {
+			height := rand.Intn(opts.win_height/2 - 1)
+			xloc := (ppxloc + vx) % opts.win_width
+			ppxloc = xloc
+			pipes_out <- Pipe_t{xloc: xloc, height: height}
+		}
+	}()
+	return pipes_out
 }
 
 type Bird_t struct {
@@ -30,14 +34,16 @@ type Bird_t struct {
 	vy           int
 	vx           int
 	time_started int
+	opts         *GameOpts
 }
 
-func NewBird(opts GameOpts) Bird_t {
+func NewBird(opts *GameOpts) Bird_t {
 	return Bird_t{
-        xloc: 0,
-        yloc: opts.win_height / 2,
-		vy: 0,
-		vx: 0,
+		xloc: 0,
+		yloc: opts.win_height / 2,
+		vy:   0,
+		vx:   1,
+		opts: opts,
 	}
 }
 
@@ -48,7 +54,7 @@ func (b *Bird_t) UpdatePos(isKeyPressed bool) {
 		b.yloc += b.vy
 	}
 
-	b.xloc += b.vx
+	b.xloc = (b.xloc + b.vx) % b.opts.win_width
 }
 
 func (g *Game) IsCollided(p *Pipe_t, b *Bird_t) bool {

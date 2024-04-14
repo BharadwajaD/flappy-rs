@@ -1,36 +1,29 @@
 local M = {}
 
--- Define buffer as a global variable
-local buffer = ""
-
--- Commands are separated by ?
--- Example: P:12:24?B:11:12?...
-function M.process_packets(chunk)
-    local stream = buffer .. chunk
-    local cmd_sep = "?"
+local stream = ""
+function M.process_tcp_packets(chunk)
+    stream = stream .. chunk
     local sep = ":"
-    local splits = {}
-
-    local idx = string.find(stream, cmd_sep)
-    while idx do
-        local cmd = string.sub(stream, 1, idx - 1)
-        stream = string.sub(stream, idx + 1)
-
-        local cmd_splits = {}
-        for split in string.gmatch(cmd, "([^" .. sep .. "]+)") do
-            table.insert(cmd_splits, split)
+    local idx
+    return function ()
+        if stream == "" then
+            return
         end
 
-        table.insert(splits, cmd_splits)
+        idx = string.find(stream, "?")
+        local cmd_str = string.sub(stream, 1, idx)
+        local cmd_idx = string.find(cmd_str, sep)
+        local cmd = string.sub(cmd_str, 1, cmd_idx-1)
+        cmd_str = string.sub(cmd_str, cmd_idx+1, #cmd_str - 1)
+        local params = {}
 
-        idx = string.find(stream, cmd_sep)
+        for param in string.gmatch(cmd_str, "([^" .. sep .. "]+)") do
+            table.insert(params, tonumber(param))
+        end
+
+        stream = string.sub(stream, idx+1)
+        return { cmd = cmd,  params = params}
     end
-
-    -- Update the global buffer
-    buffer = stream
-
-    return splits
 end
-
 
 return M
