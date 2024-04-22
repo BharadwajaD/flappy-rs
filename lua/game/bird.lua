@@ -14,8 +14,9 @@ local M = {}
     end
     local prev = M.prev_bird
 
-    buffer:remove_point(prev.x_loc, prev.y_loc)
-    buffer:place_point(x_loc, y_loc, "b")
+    -- pcall to handle errors
+    buffer:RemovePoint(prev.x_loc, prev.y_loc)
+    buffer:PlacePoint(x_loc, y_loc, "b")
 
     M.prev_bird = {x_loc= x_loc, y_loc= y_loc}
 

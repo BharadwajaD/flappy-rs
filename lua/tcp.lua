@@ -18,7 +18,7 @@ function M.process_tcp_packets(chunk)
         local params = {}
 
         for param in string.gmatch(cmd_str, "([^" .. sep .. "]+)") do
-            table.insert(params, tonumber(param))
+            table.insert(params, tonumber(param) + 1)
         end
 
         stream = string.sub(stream, idx+1)

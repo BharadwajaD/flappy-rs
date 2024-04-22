@@ -6,7 +6,7 @@ import (
 )
 
 func main(){
-    gameOpts := game.NewGameOpts(1, 80, 24);
+    gameOpts := game.NewGameOpts(5, 80, 24);
     serverConfig := tcp.Config{
     	Host: "127.0.0.1",
     	Port: "42069",

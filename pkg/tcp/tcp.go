@@ -49,7 +49,7 @@ func (server *Server) Run(gameOpts *game.GameOpts) {
 
 		client := &Client{
 			conn: conn,
-			game: game.NewGame(*gameOpts),
+			game: game.NewGame(gameOpts.Clone()),
 		}
 		go client.handleRequest()
 	}
@@ -76,6 +76,7 @@ func (client *Client) handleRequest() {
         if err != nil {return}
         gmsg , err := game.MessageFromStr(string(msg))
         if err != nil {return}
-        client.game.GameInChan <- gmsg
+        log.Printf("DEBUG:HANDLE REQUEST: %+v\n", gmsg )
+        client.game.GameInChan <- *gmsg
     }
 }

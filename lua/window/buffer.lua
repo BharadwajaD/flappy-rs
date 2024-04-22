@@ -32,15 +32,23 @@ function Buffer:render()
     api.nvim_buf_set_lines(self.buffer_id, 0, -1, 0, tbl)
 end
 
-function Buffer:place_point(x, y, char)
+function Buffer:out_of_bounds(x, y)
+    local height = self.dim.height
+    if y < 1 or y > height then
+        return true
+    end
+    return false
+end
+
+function Buffer:PlacePoint(x, y, char)
     self.buffer[y][x] = char
 end
 
-function Buffer:remove_point(x, y)
+function Buffer:RemovePoint(x, y)
     self.buffer[y][x] = " "
 end
 
-function Buffer:place_vline(x, h, char, fromEnd)
+function Buffer:PlaceVline(x, h, char, fromEnd)
     for y = 1, h, 1 do
         self.buffer[y][x] = char
     end
@@ -53,7 +61,7 @@ function Buffer:place_vline(x, h, char, fromEnd)
     end
 end
 
-function Buffer:remove_vline(x, h, fromEnd)
+function Buffer:RemoveVline(x, h, fromEnd)
     for y = 1, h, 1 do
         self.buffer[y][x] = " "
     end
@@ -64,8 +72,10 @@ function Buffer:remove_vline(x, h, fromEnd)
             self.buffer[sze-y][x] = " "
         end
     end
+end
 
-    print("Removed: ", x, h)
+function Buffer:close()
+    api.nvim_buf_delete(self.buffer_id, {force= true})
 end
 
 return Buffer

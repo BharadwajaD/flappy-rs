@@ -38,7 +38,11 @@ function M.create_window(dim)
     api.nvim_win_set_buf(window, buffer.buffer_id)
 
 
-    return {dim = {width = width, height = height}, buffer = buffer}
+    return {dim = {width = width, height = height}, buffer = buffer, window = window}
+end
+
+function M.close_window(window)
+    api.nvim_win_close(window, true)
 end
 
 return M

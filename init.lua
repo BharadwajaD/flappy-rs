@@ -1,7 +1,3 @@
-local uv = vim.loop
-local api = vim.api
-
-local keypress = require("window.keypress")
 local Game = require("game.game")
 
 -- TODO: Don't know wat to do with this
@@ -9,23 +5,20 @@ local group = vim.api.nvim_create_augroup("flappy.window", {
     clear = true
 })
 
-local M = {}
-
-function KeyPressStart()
-    local win_config = window.create_window({width = 80, height = 24})
-    local buffer_id = win_config.buffer.buffer_id
-    keypress.KeyPressEvent(buffer_id)
-end
-
+local game
 function START()
+    -- assert(game == nil, "Game already started")
 
     local dim = {width = 80, height = 24}
-    local game = Game:new({dim = dim})
-    M.game = game
+    game = Game:New({dim = dim})
     game:Start()
 
 end
 
 function END()
-    M.game:End()
+    -- assert(game, "No Game to end")
+    if game.running then
+       game:End()
+    end
+    game = nil
 end

@@ -19,18 +19,19 @@ function Pipes:add_pipe(x_loc, height)
     local dim = self.buffer.dim
     assert(height < math.floor(dim.height)/2, "too long pipe")
 
-    self.buffer:place_vline(x_loc, height, "x")
-    self.buffer:place_vline(x_loc, height, "x", true)
+    self.buffer:PlaceVline(x_loc, height, "x")
+    self.buffer:PlaceVline(x_loc, height, "x", true)
  end
 
 function Pipes:remove_pipe( x_loc, height)
-    self.buffer:remove_vline(x_loc, height)
-    self.buffer:remove_vline(x_loc, height, true)
+    self.buffer:RemoveVline(x_loc, height)
+    self.buffer:RemoveVline(x_loc, height, true)
 end
 
 function Pipes:place(param1, param2)
     local rpipe = self.pqueue:enqueue({param1 = param1, param2 = param2})
     if rpipe ~= nil then
+        print(vim.inspect(rpipe))
         self:remove_pipe(rpipe.param1, rpipe.param2)
     end
     self:add_pipe(param1, param2)

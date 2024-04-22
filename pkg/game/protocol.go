@@ -13,6 +13,7 @@ const (
 	Pipe
 	Start
 	End
+	KeyPress
 )
 
 // From go to lua
@@ -27,12 +28,12 @@ type Message struct {
 
 var stream string //TODO: SHould not use global var
 
-func MessageFromStr(chunk string) (Message, error) {
+func MessageFromStr(chunk string) (*Message, error) {
 
 	stream += chunk
 	idx := strings.Index(stream, "?")
 	if idx == -1 {
-		return Message{}, nil
+        return nil, nil
 	}
 
 	cmd := stream[:idx]
@@ -43,23 +44,36 @@ func MessageFromStr(chunk string) (Message, error) {
 
 	obj := strings.TrimSpace(str_splits[0])
 
-	if obj == "B" {
+	switch obj {
+	case "B":
 		msg.cmd = Bird
-	} else if obj == "P" {
+	case "P":
 		msg.cmd = Pipe
-	} else {
-		return msg, fmt.Errorf("Invalid first char:%s", str_splits[0])
+	case "S":
+		msg.cmd = Start
+	case "E":
+		msg.cmd = End
+	case "K":
+		msg.cmd = KeyPress
+	default:
+		return nil, fmt.Errorf("Invalid first char:%s", str_splits[0])
 	}
 
-    for _, p_str := range str_splits[1:]{
-        param, err := strconv.Atoi(strings.TrimSpace(p_str))
-        if err != nil {
-            return msg, fmt.Errorf("Invalid second or third fields:%+v", err)
+	for _, p_str := range str_splits[1:] {
+        p_str = strings.TrimSpace(p_str)
+        if len(p_str) == 1 && !(p_str[0] >= '0' && p_str[0] <= '9'){
+            // single char
+            msg.params = append(msg.params, int(p_str[0]))
+        }else{
+            param, err := strconv.Atoi(strings.TrimSpace(p_str))
+            if err != nil {
+                return nil, fmt.Errorf("Invalid %+v\n", p_str)
+            }
+            msg.params = append(msg.params, param)
         }
-        msg.params = append(msg.params, param)
-    }
+	}
 
-	return msg, nil
+	return &msg, nil
 }
 
 func MessageToStr(msg *Message) (string, error) {
@@ -77,10 +91,10 @@ func MessageToStr(msg *Message) (string, error) {
 		return "", fmt.Errorf("No obj %v\n", msg.cmd)
 	}
 
-    for _, param := range msg.params {
-        str += strconv.Itoa(param) + ":"
-    }
-    str = str[:len(str)-1]
-    str += "?"
+	for _, param := range msg.params {
+		str += strconv.Itoa(param) + ":"
+	}
+	str = str[:len(str)-1]
+	str += "?"
 	return str, nil
 }
