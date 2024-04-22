@@ -106,19 +106,27 @@ func (g *Game) Start() error {
 			case <-ticker.C:
 				//execute state changes
 				{
+                    endGame := false
 					log.Printf("DEBUG:TICK\n")
-					g.bird.UpdatePos(isKeyPressed)
+                    err := g.bird.UpdatePos(isKeyPressed, &g.gameOpts)
+                    if err != nil {
+                        endGame = true
+                    }
 					status := g.Status(&g.bird, &pipe)
 					g.GameOutChan <- Message{cmd: Bird, params: []int{g.bird.xloc, g.bird.yloc}}
 					isKeyPressed = false
 					if status == Collided {
-						g.GameOutChan <- Message{cmd: End, params: []int{g.stats}}
-						g.Stop()
+                        endGame = true
 					} else if status == Crossed {
 						pipe = <-g.pipe
 						g.GameOutChan <- Message{cmd: Pipe, params: []int{pipe.xloc, pipe.height}}
 						g.stats++
 					}
+
+                    if endGame {
+						g.GameOutChan <- Message{cmd: End, params: []int{g.stats}}
+						g.Stop()
+                    }
 				}
 			}
 

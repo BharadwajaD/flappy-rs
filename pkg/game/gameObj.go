@@ -1,6 +1,9 @@
 package game
 
-import "math/rand"
+import (
+	"fmt"
+	"math/rand"
+)
 
 type Stats struct {
 	time_started int
@@ -48,7 +51,7 @@ func NewBird(opts *GameOpts) Bird_t {
 	}
 }
 
-func (b *Bird_t) UpdatePos(isKeyPressed bool)  {
+func (b *Bird_t) UpdatePos(isKeyPressed bool, gopts *GameOpts)  error {
 	if isKeyPressed {
 		b.yloc -= b.jump
 	} else {
@@ -56,5 +59,11 @@ func (b *Bird_t) UpdatePos(isKeyPressed bool)  {
 	}
 
 	b.xloc = (b.xloc + b.vx) % b.opts.win_width
+
+    if b.yloc < 0 || b.yloc > gopts.win_height {
+        return fmt.Errorf("Bird out of bound")
+    }
+
+    return nil
 }
 
