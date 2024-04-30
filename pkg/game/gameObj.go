@@ -15,8 +15,13 @@ type Pipe_t struct {
 	height int
 }
 
-func GenPipes(opts *GameOpts) chan Pipe_t {
-	pipes_out := make(chan Pipe_t, 10)
+func GenPipes(ggame *GroupGame, opts *GameOpts, game_id int) <- chan Pipe_t {
+
+    if ggame != nil{
+        return ggame.pipes.Subscribe(game_id)
+    } 
+
+    pipes_out := make(chan Pipe_t, 10)
 	max_gap := opts.win_width / 8
 	go func() {
 		ppxloc := 0
