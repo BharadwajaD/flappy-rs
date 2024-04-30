@@ -70,8 +70,7 @@ const (
 func (g *Game) Status(b *Bird_t, p *Pipe_t) GameStatus {
 	if p.xloc == b.xloc {
 		if b.yloc <= p.height || b.yloc >= g.gameOpts.win_height-p.height {
-			//return Collided
-            return Crossed //For testing 
+			return Collided
 		} else {
 			return Crossed
 		}
@@ -109,26 +108,22 @@ func (g *Game) Start() error {
 			case <-ticker.C:
 				//execute state changes
 				{
-					endGame := false
 					log.Debug().Msgf("DEBUG:TICK\n")
 					err := g.bird.UpdatePos(isKeyPressed, &g.gameOpts)
 					if err != nil {
-						endGame = true
+						g.GameOutChan <- Message{cmd: End, params: []int{g.stats}}
+						g.Stop()
 					}
 					status := g.Status(&g.bird, &pipe)
 					g.GameOutChan <- Message{cmd: Bird, params: []int{g.bird.xloc, g.bird.yloc}}
 					isKeyPressed = false
 					if status == Collided {
-						endGame = true
+						g.GameOutChan <- Message{cmd: End, params: []int{g.stats}}
+						g.Stop()
 					} else if status == Crossed {
 						pipe = <-g.pipe
 						g.GameOutChan <- Message{cmd: Pipe, params: []int{pipe.xloc, pipe.height}}
 						g.stats++
-					}
-
-					if endGame {
-						g.GameOutChan <- Message{cmd: End, params: []int{g.stats}}
-						g.Stop()
 					}
 				}
 			}
@@ -144,9 +139,9 @@ func (g *Game) Stop() {
 
 	g.gameOpts.ticker.Stop()
 	log.Debug().Msgf("DEBUG:TICKER STOP")
-    if g.ggame != nil {
-        g.ggame.pipes.UnSubscribe(g.game_id)
-    }
+	if g.ggame != nil {
+		g.ggame.pipes.UnSubscribe(g.game_id)
+	}
 
 	//TODO: error from writing side
 	//close(g.GameInChan)

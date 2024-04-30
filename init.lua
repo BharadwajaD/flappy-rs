@@ -6,11 +6,11 @@ local group = vim.api.nvim_create_augroup("flappy.window", {
 })
 
 local game
-function START()
+function START(host, port)
     -- assert(game == nil, "Game already started")
 
     local dim = {width = 80, height = 24}
-    game = Game:New({dim = dim})
+    game = Game:New({dim = dim, host = host, port = port})
     game:Start()
 
 end

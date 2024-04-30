@@ -14,11 +14,13 @@ type GroupGame struct {
 func NewGroupGame(opts *GameOpts) GroupGame {
     pipes := spmc.NewSpmc[Pipe_t]()
 
+    //TODO: Needs refactoring 
 	max_gap := opts.win_width / 8
+    min_height := opts.win_height / 2 - 4
 	go func() {
-		ppxloc := 0
+		ppxloc := 3
 		for {
-			height := rand.Intn(opts.win_height/2 - 1)
+			height := max(min_height, rand.Intn(opts.win_height/2 - 1))
 			xloc := (ppxloc + max_gap/2 + rand.Intn(max_gap/2)) % opts.win_width
 			ppxloc = xloc
             //TODO: ticker might be needed

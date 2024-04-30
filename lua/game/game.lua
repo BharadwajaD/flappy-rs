@@ -15,7 +15,14 @@ function Game:New(config)
     -- buffer and window
     -- game objects
 
+    local host = config.host or "127.0.0.1"
+    local port = config.port or 42069
+
     self.tcp_client = uv.new_tcp()
+    self.tcp_client:connect(host, port, function (err)
+        print("client created & connected to server")
+    end)
+
     local win_config = window.create_window(config.dim)
     self.window = win_config.window
     self.buffer = win_config.buffer
@@ -44,10 +51,6 @@ end
 function Game:Start()
 
     self.running = true
-    self.tcp_client:connect("127.0.0.1", 42069, function (err)
-        print("client created & connected to server")
-    end)
-
     self.tcp_client:read_start(
         vim.schedule_wrap(
             function (err, chunk)
