@@ -2,18 +2,12 @@ package tcp
 
 import (
 	"bufio"
-	"fmt"
 	"net"
 
 	"github.com/bharadwajaD/flappy-go/pkg/game"
 	"github.com/rs/zerolog/log"
 )
 
-// Server_t ...
-type Server_t struct {
-	host string
-	port string
-}
 
 // Client ...
 type Client struct {
@@ -25,34 +19,6 @@ type Client struct {
 type Config struct {
 	Host string
 	Port string
-}
-
-func NewServer_t(config *Config) *Server_t {
-	return &Server_t{
-		host: config.Host,
-		port: config.Port,
-	}
-}
-
-func (server *Server_t) Run(gameOpts *game.GameOpts) {
-	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%s", server.host, server.port))
-	if err != nil {
-		log.Fatal().Msgf("%+v\n", err)
-	}
-	defer listener.Close()
-
-	for {
-		conn, err := listener.Accept()
-		if err != nil {
-			log.Fatal().Msgf("%+v\n", err)
-		}
-
-		client := &Client{
-			conn: conn,
-			game: game.NewGame(nil, gameOpts.Clone()),
-		}
-		go client.handleRequest()
-	}
 }
 
 func (client *Client) handleRequest() {

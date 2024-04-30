@@ -9,11 +9,11 @@ import (
 type Cmd int
 
 const (
-	Bird Cmd = iota
-	Pipe
-	Start
-	End
-	KeyPress
+	BirdCmd Cmd = iota
+	PipeCmd
+	StartCmd
+	EndCmd
+	KeyPressCmd
 )
 
 // From go to lua
@@ -46,15 +46,15 @@ func MessageFromStr(chunk string) (*Message, error) {
 
 	switch obj {
 	case "B":
-		msg.cmd = Bird
+		msg.cmd = BirdCmd
 	case "P":
-		msg.cmd = Pipe
+		msg.cmd = PipeCmd
 	case "S":
-		msg.cmd = Start
+		msg.cmd = StartCmd
 	case "E":
-		msg.cmd = End
+		msg.cmd = EndCmd
 	case "K":
-		msg.cmd = KeyPress
+		msg.cmd = KeyPressCmd
 	default:
 		return nil, fmt.Errorf("Invalid first char:%s", str_splits[0])
 	}
@@ -79,13 +79,13 @@ func MessageFromStr(chunk string) (*Message, error) {
 func MessageToStr(msg *Message) (string, error) {
 	str := ""
 	switch msg.cmd {
-	case Bird:
+	case BirdCmd:
 		str += "B:"
-	case Pipe:
+	case PipeCmd:
 		str += "P:"
-	case Start:
+	case StartCmd:
 		str += "S:"
-	case End:
+	case EndCmd:
 		str += "E:"
 	default:
 		return "", fmt.Errorf("No obj %v\n", msg.cmd)

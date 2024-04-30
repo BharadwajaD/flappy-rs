@@ -23,6 +23,7 @@ func NewGameOpts(fps, win_width, win_height int) GameOpts {
 }
 
 func (gopts *GameOpts) Clone() GameOpts {
+    //Created to get NewTicker, instead of a ptr... 
 	return GameOpts{
 		frame_rate: gopts.frame_rate,
 		ticker:     time.NewTicker(time.Duration(1000/gopts.frame_rate) * time.Millisecond),
@@ -32,14 +33,15 @@ func (gopts *GameOpts) Clone() GameOpts {
 }
 
 type Game struct {
-	GameOutChan chan Message
-	GameInChan  chan Message
-	stats       int
-	gameOpts    GameOpts
-	bird        Bird_t
-	pipe        <-chan Pipe_t
 	game_id     int
 	ggame       *GroupGame
+
+	GameOutChan chan Message
+	GameInChan  chan Message
+	score       int
+	gameOpts    GameOpts
+	bird        Bird
+	pipe        <-chan Pipe
 }
 
 var game_id int
@@ -50,10 +52,10 @@ func NewGame(ggame *GroupGame, opts GameOpts) Game {
 	return Game{
 		GameOutChan: make(chan Message),
 		GameInChan:  make(chan Message),
-		stats:       0,
+		score:       0,
 		gameOpts:    opts,
 		bird:        NewBird(&opts),
-		pipe:        GenPipes(ggame, &opts, game_id),
+		pipe:        NewPipes(ggame, &opts, game_id),
 		game_id:     game_id,
 		ggame:       ggame,
 	}
@@ -67,7 +69,7 @@ const (
 	FarAway
 )
 
-func (g *Game) Status(b *Bird_t, p *Pipe_t) GameStatus {
+func (g *Game) Status(b *Bird, p *Pipe) GameStatus {
 	if p.xloc == b.xloc {
 		if b.yloc <= p.height || b.yloc >= g.gameOpts.win_height-p.height {
 			return Collided
@@ -82,23 +84,18 @@ func (g *Game) Status(b *Bird_t, p *Pipe_t) GameStatus {
 func (g *Game) Start() error {
 
 	ticker := g.gameOpts.ticker
-	//TODO: Deal with dis later
-	//g.GameOutChan <- Message{Obj: Start, Param1: g.gameOpts.win_width, Param2: g.gameOpts.win_height}
-
 	go func() {
 		isKeyPressed := false
 		pipe := <-g.pipe
 		//starting pipe and bird
-		log.Debug().Msgf("DEBUG:GAME START %+v, %+v\n", g.bird, pipe)
-		g.GameOutChan <- Message{cmd: Bird, params: []int{g.bird.xloc, g.bird.yloc}}
-		g.GameOutChan <- Message{cmd: Pipe, params: []int{pipe.xloc, pipe.height}}
-		log.Debug().Msgf("Starting Game: %d\n", g.game_id)
+		g.GameOutChan <- Message{cmd: BirdCmd, params: []int{g.bird.xloc, g.bird.yloc}}
+		g.GameOutChan <- Message{cmd: PipeCmd, params: []int{pipe.xloc, pipe.height}}
 		for {
 			select {
 			case inMsg := <-g.GameInChan:
 				//collect state changes
 				{
-					if inMsg.cmd == KeyPress {
+					if inMsg.cmd == KeyPressCmd {
 						if inMsg.params[0] == 'k' {
 							isKeyPressed = true
 						}
@@ -110,20 +107,22 @@ func (g *Game) Start() error {
 				{
 					log.Debug().Msgf("DEBUG:TICK\n")
 					err := g.bird.UpdatePos(isKeyPressed, &g.gameOpts)
+                    isKeyPressed = false
 					if err != nil {
-						g.GameOutChan <- Message{cmd: End, params: []int{g.stats}}
+						g.GameOutChan <- Message{cmd: EndCmd, params: []int{g.score}}
 						g.Stop()
 					}
+
 					status := g.Status(&g.bird, &pipe)
-					g.GameOutChan <- Message{cmd: Bird, params: []int{g.bird.xloc, g.bird.yloc}}
-					isKeyPressed = false
+					g.GameOutChan <- Message{cmd: BirdCmd, params: []int{g.bird.xloc, g.bird.yloc}}
+					
 					if status == Collided {
-						g.GameOutChan <- Message{cmd: End, params: []int{g.stats}}
+						g.GameOutChan <- Message{cmd: EndCmd, params: []int{g.score}}
 						g.Stop()
 					} else if status == Crossed {
 						pipe = <-g.pipe
-						g.GameOutChan <- Message{cmd: Pipe, params: []int{pipe.xloc, pipe.height}}
-						g.stats++
+						g.GameOutChan <- Message{cmd: PipeCmd, params: []int{pipe.xloc, pipe.height}}
+						g.score++
 					}
 				}
 			}

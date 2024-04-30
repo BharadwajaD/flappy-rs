@@ -8,7 +8,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-//multiple clients
 
 type Server struct {
 	host string
