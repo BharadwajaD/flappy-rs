@@ -1,8 +1,9 @@
 package game
 
 import (
-	"log"
 	"time"
+
+	"github.com/rs/zerolog/log"
 )
 
 type GameOpts struct {
@@ -36,25 +37,25 @@ type Game struct {
 	stats       int
 	gameOpts    GameOpts
 	bird        Bird_t
-	pipe        chan Pipe_t // might be a list
+	pipe        <-chan Pipe_t
 	game_id     int
+	ggame       *GroupGame
 }
 
 var game_id int
 
-func NewGame(opts GameOpts) Game {
-
-	GameOutChan := make(chan Message)
+func NewGame(ggame *GroupGame, opts GameOpts) Game {
 
 	game_id++
 	return Game{
-		GameOutChan: GameOutChan,
+		GameOutChan: make(chan Message),
 		GameInChan:  make(chan Message),
 		stats:       0,
 		gameOpts:    opts,
 		bird:        NewBird(&opts),
-		pipe:        GenPipes(&opts),
+		pipe:        GenPipes(ggame, &opts, game_id),
 		game_id:     game_id,
+		ggame:       ggame,
 	}
 }
 
@@ -69,7 +70,8 @@ const (
 func (g *Game) Status(b *Bird_t, p *Pipe_t) GameStatus {
 	if p.xloc == b.xloc {
 		if b.yloc <= p.height || b.yloc >= g.gameOpts.win_height-p.height {
-			return Collided
+			//return Collided
+            return Crossed //For testing 
 		} else {
 			return Crossed
 		}
@@ -80,7 +82,6 @@ func (g *Game) Status(b *Bird_t, p *Pipe_t) GameStatus {
 
 func (g *Game) Start() error {
 
-	log.Printf("Starting Game: %d\n", g.game_id)
 	ticker := g.gameOpts.ticker
 	//TODO: Deal with dis later
 	//g.GameOutChan <- Message{Obj: Start, Param1: g.gameOpts.win_width, Param2: g.gameOpts.win_height}
@@ -89,8 +90,10 @@ func (g *Game) Start() error {
 		isKeyPressed := false
 		pipe := <-g.pipe
 		//starting pipe and bird
+		log.Debug().Msgf("DEBUG:GAME START %+v, %+v\n", g.bird, pipe)
 		g.GameOutChan <- Message{cmd: Bird, params: []int{g.bird.xloc, g.bird.yloc}}
 		g.GameOutChan <- Message{cmd: Pipe, params: []int{pipe.xloc, pipe.height}}
+		log.Debug().Msgf("Starting Game: %d\n", g.game_id)
 		for {
 			select {
 			case inMsg := <-g.GameInChan:
@@ -106,27 +109,27 @@ func (g *Game) Start() error {
 			case <-ticker.C:
 				//execute state changes
 				{
-                    endGame := false
-					log.Printf("DEBUG:TICK\n")
-                    err := g.bird.UpdatePos(isKeyPressed, &g.gameOpts)
-                    if err != nil {
-                        endGame = true
-                    }
+					endGame := false
+					log.Debug().Msgf("DEBUG:TICK\n")
+					err := g.bird.UpdatePos(isKeyPressed, &g.gameOpts)
+					if err != nil {
+						endGame = true
+					}
 					status := g.Status(&g.bird, &pipe)
 					g.GameOutChan <- Message{cmd: Bird, params: []int{g.bird.xloc, g.bird.yloc}}
 					isKeyPressed = false
 					if status == Collided {
-                        endGame = true
+						endGame = true
 					} else if status == Crossed {
 						pipe = <-g.pipe
 						g.GameOutChan <- Message{cmd: Pipe, params: []int{pipe.xloc, pipe.height}}
 						g.stats++
 					}
 
-                    if endGame {
+					if endGame {
 						g.GameOutChan <- Message{cmd: End, params: []int{g.stats}}
 						g.Stop()
-                    }
+					}
 				}
 			}
 
@@ -138,8 +141,13 @@ func (g *Game) Start() error {
 
 func (g *Game) Stop() {
 	//freeing resources
+
 	g.gameOpts.ticker.Stop()
-	log.Printf("DEBUG:TICKER STOP")
+	log.Debug().Msgf("DEBUG:TICKER STOP")
+    if g.ggame != nil {
+        g.ggame.pipes.UnSubscribe(g.game_id)
+    }
+
 	//TODO: error from writing side
 	//close(g.GameInChan)
 	//close(g.GameOutChan)
