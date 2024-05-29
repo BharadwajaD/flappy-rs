@@ -7,4 +7,4 @@ Server & Game Engine - Go
 
 # Demo
 
-(./demo.mp4)
+[Demo video](./demo.mp4)
