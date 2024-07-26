@@ -1,5 +1,6 @@
 local M = {}
 
+-- returns iterator
 local stream = ""
 function M.process_tcp_packets(chunk)
     stream = stream .. chunk

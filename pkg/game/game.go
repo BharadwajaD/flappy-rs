@@ -13,6 +13,7 @@ type GameOpts struct {
 	win_height int
 }
 
+// fps, window width and height
 func NewGameOpts(fps, win_width, win_height int) GameOpts {
 	return GameOpts{
 		frame_rate: fps,
@@ -23,7 +24,7 @@ func NewGameOpts(fps, win_width, win_height int) GameOpts {
 }
 
 func (gopts *GameOpts) Clone() GameOpts {
-    //Created to get NewTicker, instead of a ptr... 
+	//Created to get NewTicker, instead of a ptr...
 	return GameOpts{
 		frame_rate: gopts.frame_rate,
 		ticker:     time.NewTicker(time.Duration(1000/gopts.frame_rate) * time.Millisecond),
@@ -33,8 +34,8 @@ func (gopts *GameOpts) Clone() GameOpts {
 }
 
 type Game struct {
-	game_id     int
-	ggame       *GroupGame
+	game_id int
+	ggame   *GroupGame
 
 	GameOutChan chan Message
 	GameInChan  chan Message
@@ -83,6 +84,8 @@ func (g *Game) Status(b *Bird, p *Pipe) GameStatus {
 
 func (g *Game) Start() error {
 
+	log.Info().Msgf("%d game started\n", g.game_id)
+
 	ticker := g.gameOpts.ticker
 	go func() {
 		isKeyPressed := false
@@ -90,6 +93,7 @@ func (g *Game) Start() error {
 		//starting pipe and bird
 		g.GameOutChan <- Message{cmd: BirdCmd, params: []int{g.bird.xloc, g.bird.yloc}}
 		g.GameOutChan <- Message{cmd: PipeCmd, params: []int{pipe.xloc, pipe.height}}
+
 		for {
 			select {
 			case inMsg := <-g.GameInChan:
@@ -99,6 +103,10 @@ func (g *Game) Start() error {
 						if inMsg.params[0] == 'k' {
 							isKeyPressed = true
 						}
+						if inMsg.params[0] == 'q' {
+							g.GameOutChan <- Message{cmd: EndCmd, params: []int{g.score}}
+							g.Stop()
+						}
 					}
 
 				}
@@ -107,7 +115,7 @@ func (g *Game) Start() error {
 				{
 					log.Debug().Msgf("DEBUG:TICK\n")
 					err := g.bird.UpdatePos(isKeyPressed, &g.gameOpts)
-                    isKeyPressed = false
+					isKeyPressed = false
 					if err != nil {
 						g.GameOutChan <- Message{cmd: EndCmd, params: []int{g.score}}
 						g.Stop()
@@ -115,7 +123,7 @@ func (g *Game) Start() error {
 
 					status := g.Status(&g.bird, &pipe)
 					g.GameOutChan <- Message{cmd: BirdCmd, params: []int{g.bird.xloc, g.bird.yloc}}
-					
+
 					if status == Collided {
 						g.GameOutChan <- Message{cmd: EndCmd, params: []int{g.score}}
 						g.Stop()

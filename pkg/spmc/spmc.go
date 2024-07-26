@@ -41,14 +41,14 @@ func (s *Spmc[T]) UnSubscribe(user_id int) {
 /// Blocking call
 func (s *Spmc[T]) Broadcast(item T) {
 	s.mutex.RLock()
-	for idx, ch := range s.chans {
-		log.Debug().Msgf("DEBUG:SPMC BROADCAST BEFORE SENDING %d %+v %d\n", idx, item, len(ch))
+	for _, ch := range s.chans {
+		//log.Debug().Msgf("DEBUG:SPMC BROADCAST BEFORE SENDING %d %+v %d\n", idx, item, len(ch))
 		select { //select the savior....
 		case ch <- item: //Getting blocked here !!!
 		default:
 		}
 
-		log.Debug().Msgf("DEBUG:SPMC BROADCAST AFTER SENDING %d %+v %d\n", idx, item, len(ch))
+		//log.Debug().Msgf("DEBUG:SPMC BROADCAST AFTER SENDING %d %+v %d\n", idx, item, len(ch))
 	}
 	s.mutex.RUnlock()
 }

@@ -1,29 +1,46 @@
-package tcp
+package server
 
 import (
+	"bufio"
 	"fmt"
 	"net"
+	"strconv"
 
 	"github.com/bharadwajaD/flappy-go/pkg/game"
 	"github.com/rs/zerolog/log"
 )
 
-
-type Server struct {
+type TCPServer struct {
 	host string
 	port string
 }
 
-func NewServer(config *Config) Server {
-	return Server{
+type tcprw struct {
+	rw *bufio.ReadWriter
+}
+
+func (trw tcprw) ReadString(delim byte) (string, error) {
+	return trw.rw.Reader.ReadString(delim)
+}
+
+func (trw tcprw) WriteString(str string) error {
+    _, err := trw.rw.Writer.WriteString(str)
+    err = trw.rw.Flush()
+
+    return err
+}
+
+func NewTCPServer(config *Config) TCPServer {
+	return TCPServer{
 		host: config.Host,
 		port: config.Port,
 	}
 }
 
-func (s *Server) Run(gameOpts *game.GameOpts) {
+func (s TCPServer) Run(gameOpts *game.GameOpts) {
 
 	ggame := game.NewGroupGame(gameOpts)
+	client_id := 0
 	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%s", s.host, s.port))
 
 	if err != nil {
@@ -40,10 +57,19 @@ func (s *Server) Run(gameOpts *game.GameOpts) {
 		log.Debug().Msgf("DEBUG:SERVER RUN: %+v", conn)
 		newgame := game.NewGame(&ggame, gameOpts.Clone())
 		log.Debug().Msgf("DEBUG:SERVER RUN: %+v", newgame)
+
+		reader := bufio.NewReader(conn)
+		writer := bufio.NewWriter(conn)
+
+		client_id++
 		client := &Client{
+			id: "TCP:" + strconv.Itoa(client_id),
+			rw: tcprw{rw: bufio.NewReadWriter(reader, writer)},
+
 			conn: conn,
 			game: newgame,
 		}
+
 		go client.handleRequest()
 	}
 }
