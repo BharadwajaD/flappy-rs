@@ -82,7 +82,7 @@ func (s WSServer) Run(gameOpts *game.GameOpts) {
 	client_id := 0
 	ggame := game.NewGroupGame(gameOpts)
 
-	http.HandleFunc("/game", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/game-ws", func(w http.ResponseWriter, r *http.Request) {
 
 		conn, _, _, err := ws.UpgradeHTTP(r, w)
 		if err != nil {

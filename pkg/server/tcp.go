@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"strconv"
+	"strings"
 
 	"github.com/bharadwajaD/flappy-go/pkg/game"
 	"github.com/rs/zerolog/log"
@@ -19,8 +20,22 @@ type tcprw struct {
 	rw *bufio.ReadWriter
 }
 
+
+var stream string //TODO: SHould not use global var
+
 func (trw tcprw) ReadString(delim byte) (string, error) {
-	return trw.rw.Reader.ReadString(delim)
+    chunk, err := trw.rw.Reader.ReadString(delim) 
+    stream += chunk
+    if err != nil {
+        //no delim in the read data
+        return "", err
+    }
+
+	idx := strings.Index(stream, "?")
+	cmd := stream[:idx]
+	stream = stream[idx+1:]
+
+	return cmd, err
 }
 
 func (trw tcprw) WriteString(str string) error {

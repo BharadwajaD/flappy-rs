@@ -23,21 +23,7 @@ type Message struct {
 	params []int
 }
 
-// B:24:32?P:12:22? ->
-// Message{obj: bird, param1 : 24, param2: 32} and Message{obj: pipe, param1 : 12, param2: 22}
-
-var stream string //TODO: SHould not use global var
-
-func MessageFromStr(chunk string) (*Message, error) {
-
-	stream += chunk
-	idx := strings.Index(stream, "?")
-	if idx == -1 {
-        return nil, nil
-	}
-
-	cmd := stream[:idx]
-	stream = stream[idx+1:]
+func MessageFromStr(cmd string) (*Message, error) {
 
 	str_splits := strings.Split(cmd, ":")
 	var msg Message
