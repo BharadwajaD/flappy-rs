@@ -5,8 +5,10 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
+	"text/template"
 
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
@@ -64,10 +66,26 @@ type WSServer struct {
 	port string
 }
 
+type HtmlGame struct{
+    GameId int
+}
+
 func NewWSServer(config *Config) WSServer {
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello world"))
+    //to load js and css files
+    http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+
+	http.HandleFunc("/game", func(w http.ResponseWriter, r *http.Request) {
+        templ, err := template.ParseFiles("./tmpl/index.html");
+        dir , err := os.Getwd()
+        log.Debug().Msgf("%+v %s\n", templ, dir)
+        if err != nil{
+            w.WriteHeader(404)
+            w.Write([]byte(err.Error()))
+        }
+
+        templ.Execute(w, HtmlGame{})
+
 	})
 
 	return WSServer{
@@ -82,6 +100,9 @@ func (s WSServer) Run(gameOpts *game.GameOpts) {
 	client_id := 0
 	ggame := game.NewGroupGame(gameOpts)
 
+    /*
+    * If using custom frontend then make a websocket connection to /game-ws and proceed
+    */
 	http.HandleFunc("/game-ws", func(w http.ResponseWriter, r *http.Request) {
 
 		conn, _, _, err := ws.UpgradeHTTP(r, w)
