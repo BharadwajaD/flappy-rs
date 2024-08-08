@@ -24,7 +24,7 @@ type tcprw struct {
 var stream string //TODO: SHould not use global var
 
 func (trw tcprw) ReadString(delim byte) (string, error) {
-    chunk, err := trw.rw.Reader.ReadString(delim) 
+    chunk, err := trw.rw.Reader.ReadString(delim)
     stream += chunk
     if err != nil {
         //no delim in the read data
@@ -39,6 +39,7 @@ func (trw tcprw) ReadString(delim byte) (string, error) {
 }
 
 func (trw tcprw) WriteString(str string) error {
+	str += "?" //message seperator
     _, err := trw.rw.Writer.WriteString(str)
     err = trw.rw.Flush()
 

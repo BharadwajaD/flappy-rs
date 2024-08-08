@@ -81,6 +81,5 @@ func MessageToStr(msg *Message) (string, error) {
 		str += strconv.Itoa(param) + ":"
 	}
 	str = str[:len(str)-1]
-	str += "?"
 	return str, nil
 }
